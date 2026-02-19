@@ -5,6 +5,8 @@
 responsesValues = [5, 7, 3, 8]
 responsesValues.append(0)
 print("After append(0):", responsesValues)
-responsesValues.insert(2, 6)
+
+#responsesValues.insert(2, 6)
+responsesValues = responsesValues[:2] + [6] + responsesValues[2:]
 print("After insert(2, 6):", responsesValues)
 

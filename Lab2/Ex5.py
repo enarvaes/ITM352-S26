@@ -11,4 +11,4 @@ weight_in_kg = weight_in_pounds_float * kg_to_pounds
 
 weight_in_kg = round(weight_in_kg, 2)
 
-print(you entered {weight_in_pounds} pounds, which is {weight_in_kg:.2f} kilograms.)
+print(f"You entered {weight_in_pounds} pounds, which is {weight_in_kg:.2f} kilograms.")

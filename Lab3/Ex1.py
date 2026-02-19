@@ -10,11 +10,4 @@ print(f"Encoded text: {encoded_text}")
 decoded_text = cipher_suite.decrypt(encoded_text)
 print(f"Decoded text: {decoded_text.decode('utf-8')}")
 
-def max(num1, num2):
-    #Return the maximum of two numbers
-    return num1 if num1 > num2 else num2
-
-def min(num1, num2):
-    #Return the minimum of two numbers
-    return num1 if num1 < num2 else num2
 
