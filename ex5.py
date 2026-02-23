@@ -4,8 +4,13 @@ ages = (36, 38, 36, 61, 50)
 celebs_list = []
 ages_list = []
 
-for celeb in celebs:
-    celebs_list.append(celeb)
+#for celeb in celebs:
+    #celebs_list.append(celeb)
+i = 0
+while i < len(celebs):
+    celebs_list.append(celebs[i])
+    ages_list.append(ages[i])
+    i += 1
 
 ages_lists = [age for age in ages]
 
