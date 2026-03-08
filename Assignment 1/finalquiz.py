@@ -6,9 +6,11 @@
 #Allow the user to select the correct answer by a label
 #Improve look and usability. Keep track of correct answers
 
-import json, time, random
+import json, time, random, os
 
-with open('question.json') as f:
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+with open(os.path.join(script_dir, 'question.json')) as f:
     data = json.load(f)
 
 cats = list(data.keys())
@@ -36,15 +38,16 @@ for q in questions:
         print('correct, +', pts)
     else:
         print('wrong')
+    print('Explanation:', q['explanation'])
 
 print('\nfinal score', score)
 name = input('your name? ')
 try:
-    with open('scores.json') as f:
+    with open(os.path.join(script_dir, 'scores.json')) as f:
         s = json.load(f)
 except:
     s = {'history': []}
 s['history'].append({'name': name, 'score': score})
-with open('scores.json', 'w') as f:
+with open(os.path.join(script_dir, 'scores.json'), 'w') as f:
     json.dump(s, f)
 
