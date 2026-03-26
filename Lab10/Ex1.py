@@ -1,4 +1,3 @@
-# Create a list of tuples that are percentiles of household incomes
 import numpy as np
 
 hh_income = [
@@ -15,8 +14,15 @@ hh_income = [
 
 hh_income_array = np.array(hh_income)
 
-# Report rhe dimensions of the array and the number of eleements in the array
+# Report the dimensions and number of elements
 print("Dimensions of the array:", hh_income_array.ndim)
-print("Dimensions v2:", hh_income_array.shape)
+print("Shape of the array:", hh_income_array.shape)
 print("Number of elements in the array:", hh_income_array.size)
 
+# Print table header
+print("\nPercentile   Household Income")
+print("-" * 30)
+
+# Print each row in a formatted table
+for percentile, income in hh_income_array:
+    print(f"{percentile:>9}%   ${income:>10,}")
