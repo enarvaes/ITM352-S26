@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question {{ question_id }}</title>
+</head>
+<body>
+    <h1>Question {{ question_id }} of {{ total_questions }}</h1>
+    <p>{{ question.question }}</p>
+
+    <p><strong>Hint:</strong> {{ question.hint }}</p>
+
+    <form method="post" action="/quiz/question/{{ question_id }}">
+        {% for choice in question.options %}
+        <label>
+            <input type="radio" name="answer" value="{{ loop.index0 }}" {% if selected_answer == loop.index0 %}checked{% endif %} required> {{ choice }}
+        </label>
+        <br>
+        {% endfor %}
+
+        <br>
+        <button type="submit">{% if is_last %}Finish Quiz{% else %}Next Question{% endif %}</button>
+    </form>
+
+    <p><a href="/quiz">Back to Quiz Start</a></p>
+</body>
+</html>

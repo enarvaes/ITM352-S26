@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Results</title>
+</head>
+<body>
+    <h1>Quiz Results</h1>
+    <p>Category: {{ category }}</p>
+    <ul>
+        <li>Correct: {{ correct }}</li>
+        <li>Incorrect: {{ incorrect }}</li>
+        <li>Percent: {{ percent }}%</li>
+    </ul>
+
+    <h2>Review</h2>
+    {% for item in results %}
+    <p><strong>Question:</strong> {{ item.question }}</p>
+    <p><strong>Your answer:</strong> {{ item.selected }}</p>
+    <p><strong>Correct answer:</strong> {{ item.correct }}</p>
+    <p><strong>Result:</strong> {% if item.is_correct %}Correct{% else %}Incorrect{% endif %}</p>
+    <p><strong>Explanation:</strong> {{ item.explanation }}</p>
+    <hr>
+    {% endfor %}
+
+    <p><a href="/quiz">Retake Quiz</a></p>
+    <p><a href="/">Back to Home</a></p>
+</body>
+</html>
