@@ -1,0 +1,13 @@
+import pandas as pd
+import numpy as np
+
+filename = "https://drive.google.com/uc?id=1ujY0WCcePdotG2xdbLyeECFW9lCJ4t-K"
+
+pd.set_option('display.max_columns', None)  # Show all columns in the output
+
+df = pd.read_csv(filename, engine='pyarrow')
+df['order_date'] = pd.to_datetime(df['order_date'], errors='coerce')
+
+print(df.info())
+print(df.describe())
+print(df.head(5))

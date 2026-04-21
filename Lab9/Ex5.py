@@ -1,7 +1,6 @@
 import json
 import os
 
-# Define the dictionary of quiz questions (from Assignment 1)
 quiz_questions = {
     "General": [
         {
@@ -42,14 +41,11 @@ quiz_questions = {
     ]
 }
 
-# Extract just the questions into a list
 questions_only = [q["question"] for q in quiz_questions["General"]]
 
-# Get the directory where this script is located
 script_dir = os.path.dirname(os.path.abspath(__file__))
 json_file_path = os.path.join(script_dir, "quiz_questions.json")
 
-# Save the list of questions as a JSON file
 with open(json_file_path, 'w') as json_file:
     json.dump(questions_only, json_file, indent=4)
 

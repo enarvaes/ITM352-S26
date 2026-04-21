@@ -19,6 +19,10 @@ def lload_csv(file_path):
         print(f"File loaded successfully in {load_time:.2f} seconds.")
         print(f"Number of rows: {len(df)}")
         print(f"Columns: {list(df.columns)}")
+        df['order_date'] = pd.to_datetime(df['order_date'], format='%Y-%m-%d', errors='coerce')
+        #df.fillna(0, inplace=True)  # Fill NaN values with 0 for numeric columns
+        df['sales'] = df['quantity'] * df['unit_price']
+
         required_columns = ['quantity', 'unit_price', 'order_date']
 
         #Check if required columns are present

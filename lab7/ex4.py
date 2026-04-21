@@ -1,9 +1,9 @@
-#recent_purchases = [36.13, 23.87, 183.53, 22.93, 11.62]
+recent_purchases = [36.13, 23.87, 183.53, 22.93, 11.62]
 
-#budget = 150
-#total_spent = 0
+budget = 150
+total_spent = 0
 
-#for purchase in recent_purchases:
+for purchase in recent_purchases:
     total_spent += purchase
     if total_spent > budget:
         print(f"This purchase is over budget:", purchase)

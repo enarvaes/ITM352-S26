@@ -2,6 +2,9 @@
 # the number if it is not equal to 5 (using continue) and stop the 
 # loop entirely and print a message when it reaches 8 (using break).
 
+
+#Changed range to 1 - 11 to include 10
+# Changed the if fuction to check for both 5 and 8
 for x in range(1, 11):
     if x != 5 and x != 8:
         print(x)
