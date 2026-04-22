@@ -83,7 +83,14 @@
                     <li class="mb-2"><strong>Total Questions:</strong> {{ total }}</li>
                     <li class="mb-2"><strong>Correct:</strong> <span class="badge bg-success">{{ correct }}</span></li>
                     <li class="mb-2"><strong>Incorrect:</strong> <span class="badge bg-danger">{{ total - correct }}</span></li>
-                    <li class="mb-2"><strong>Accuracy:</strong> {{ score }}%</li>
+                    <li class="mb-2"><strong>Hint Used:</strong>
+                        {% if hints_used > 0 %}
+                            <span class="badge bg-warning text-dark">Yes (-10 pts penalty applied)</span>
+                        {% else %}
+                            <span class="badge bg-secondary">No</span>
+                        {% endif %}
+                    </li>
+                    <li class="mb-2"><strong>Final Score:</strong> {{ score }}%</li>
                     <li><strong>Time Elapsed:</strong> {{ (time_taken // 60) }}m {{ (time_taken % 60) }}s</li>
                 </ul>
             </div>
@@ -121,13 +128,6 @@
             </div>
         </div>
 
-        <div class="row gap-2 mt-3">
-            <div class="col">
-                <a href="/leaderboard" class="btn btn-outline-secondary btn-lg w-100">
-                    <i class="fas fa-trophy"></i> View Leaderboard
-                </a>
-            </div>
-        </div>
     </div>
 </div>
 

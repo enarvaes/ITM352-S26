@@ -5,8 +5,8 @@
 # Converts the console quiz from Assignment 1 into a Flask web app.
 # Individual requirements implemented:
 #   1. Persistent User Identification and History (sessions + users.json)
-#   2. Leaderboard System (scores.json + /leaderboard)
-# Extra credit: Answer Explanations and Responsive Design.
+#   9. Question Review and Explanation (explanation shown after each answer)
+#   5. Hint System (one hint per quiz, -10 point penalty)
 
 import json
 import os
@@ -27,10 +27,7 @@ USERS_FILE = DATA_DIR / "users.json"
 # Which extra credit features are turned on. Keeping this as a dict makes it
 # easy to flip features without hunting through templates.
 EXTRAS_ENABLED = {
-    "timer": False,
-    "progress_bar": False,
     "explanations": True,
-    "responsive": True,
 }
 
 app = Flask(__name__)
@@ -93,6 +90,7 @@ def start_new_quiz(user_id):
         "questions": questions,
         "answers": [None] * len(questions),
         "started_at": datetime.now(),
+        "hints_used": 0,
     }
     return active_quizzes[user_id]
 
@@ -221,8 +219,9 @@ def results():
         correct = int(request.args.get("correct", 0))
         total = int(request.args.get("total", 0))
         time_taken = int(request.args.get("time_taken", 0))
+        hints_used = int(request.args.get("hints_used", 0))
     except ValueError:
-        score, correct, total, time_taken = 0, 0, 0, 0
+        score, correct, total, time_taken, hints_used = 0, 0, 0, 0, 0
 
     if total <= 0:
         # Avoid a divide-by-zero in the results template.
@@ -233,45 +232,9 @@ def results():
         correct=correct,
         total=total,
         time_taken=time_taken,
+        hints_used=hints_used,
     )
 
-
-@app.route("/leaderboard")
-def leaderboard():
-    scores = load_json_file(SCORES_FILE)
-    users = load_json_file(USERS_FILE)
-
-    rankings = []
-    for user_id, user_scores in scores.items():
-        if user_scores and user_id in users:
-            avg_score = sum(s["score"] for s in user_scores) / len(user_scores)
-            best_score = max(s["score"] for s in user_scores)
-            rankings.append({
-                "user_id": user_id,
-                "name": users[user_id]["name"],
-                "avg_score": round(avg_score, 2),
-                "best_score": round(best_score, 2),
-                "quizzes_taken": len(user_scores),
-            })
-
-    # Rank by best score first, then average as a tiebreaker.
-    rankings.sort(key=lambda x: (x["best_score"], x["avg_score"]), reverse=True)
-    top_10 = rankings[:10]
-
-    current_user_id = session.get("user_id")
-    current_user_rank = None
-    if current_user_id:
-        for i, entry in enumerate(rankings, start=1):
-            if entry["user_id"] == current_user_id:
-                current_user_rank = i
-                break
-
-    return render_template(
-        "leaderboard.html",
-        leaderboard=top_10,
-        current_user_rank=current_user_rank,
-        current_user_id=current_user_id,
-    )
 
 
 # ---- REST API ----
@@ -280,17 +243,10 @@ def leaderboard():
 @login_required
 def api_quiz_start():
     user_id = session["user_id"]
-    data = request.get_json() or {}
-    mode = data.get("mode", "normal")
-    time_limit = data.get("time_limit", 300)
-
     quiz_state = start_new_quiz(user_id)
     if not quiz_state["questions"]:
         return jsonify({"success": False, "error": "No questions available"})
 
-    # Remember mode and time limit for when we save the result.
-    session["quiz_mode"] = mode
-    session["quiz_time_limit"] = time_limit
     session["quiz_id"] = quiz_state["quiz_id"]
 
     first = quiz_state["questions"][0]
@@ -298,8 +254,6 @@ def api_quiz_start():
         "success": True,
         "quiz_id": quiz_state["quiz_id"],
         "total_questions": len(quiz_state["questions"]),
-        "mode": mode,
-        "time_limit": time_limit,
         "question": {
             "id": 0,
             "text": first["question"],
@@ -329,6 +283,33 @@ def api_get_question(question_id):
             "options": q["options"],
             "total": len(questions),
         },
+    })
+
+
+@app.route("/api/get-hint", methods=["POST"])
+@login_required
+def api_get_hint():
+    user_id = session["user_id"]
+    quiz_state = get_active_quiz(user_id)
+    if not quiz_state:
+        return jsonify({"success": False, "error": "No active quiz"})
+
+    if quiz_state["hints_used"] >= 1:
+        return jsonify({"success": False, "error": "You have already used your one hint for this quiz"})
+
+    data = request.get_json() or {}
+    question_id = data.get("question_id")
+    questions = quiz_state["questions"]
+    if not isinstance(question_id, int) or question_id < 0 or question_id >= len(questions):
+        return jsonify({"success": False, "error": "Invalid question"})
+
+    hint = questions[question_id].get("hint", "No hint available for this question.")
+    quiz_state["hints_used"] += 1
+
+    return jsonify({
+        "success": True,
+        "hint": hint,
+        "hints_remaining": 0,
     })
 
 
@@ -384,7 +365,9 @@ def api_submit_quiz():
     answers = quiz_state["answers"]
     total_count = len(answers)
     correct_count = sum(1 for a in answers if a and a.get("is_correct"))
-    score = round((correct_count / total_count * 100), 2) if total_count > 0 else 0
+    hints_used = quiz_state.get("hints_used", 0)
+    hint_penalty = hints_used * 10
+    score = max(0, round((correct_count / total_count * 100) - hint_penalty, 2)) if total_count > 0 else 0
 
     scores = load_json_file(SCORES_FILE)
     if user_id not in scores:
@@ -396,7 +379,7 @@ def api_submit_quiz():
         "correct": correct_count,
         "total": total_count,
         "time_taken": time_taken,
-        "mode": session.get("quiz_mode", "normal"),
+        "hints_used": hints_used,
     })
     save_json_file(SCORES_FILE, scores)
 
@@ -409,6 +392,7 @@ def api_submit_quiz():
         "correct": correct_count,
         "total": total_count,
         "time_taken": time_taken,
+        "hints_used": hints_used,
     })
 
 
