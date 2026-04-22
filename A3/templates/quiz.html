@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz - Quiz Game{% endblock %}
+
+{% block content %}
+<div class="quiz-container">
+    <div class="card mb-4 quiz-header">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <h5 class="mb-0">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">0</span></h5>
+                </div>
+                {% if extras_enabled.timer %}
+                <div class="col-md-4 text-center">
+                    <div id="timerDisplay" class="timer-display">
+                        <i class="fas fa-clock"></i> <span id="timeRemaining">5:00</span>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="col-md-4 text-end">
+                    <span id="scoreDisplay" class="badge bg-success">Answered: 0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if extras_enabled.progress_bar %}
+    <div class="mb-4">
+        <div class="progress" style="height: 25px;">
+            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                 role="progressbar" style="width: 0%;">
+                <span id="progressText">0%</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card mb-4 question-card">
+        <div class="card-body p-4">
+            <h3 id="questionText" class="mb-4">Loading question...</h3>
+            <div id="optionsContainer" class="options-container"></div>
+        </div>
+    </div>
+
+    <div class="row gap-2 mb-4">
+        <div class="col">
+            <button id="prevBtn" class="btn btn-outline-secondary w-100" disabled>
+                <i class="fas fa-arrow-left"></i> Previous
+            </button>
+        </div>
+        <div class="col">
+            <button id="nextBtn" class="btn btn-primary w-100" disabled>
+                Next <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+        <div class="col">
+            <button id="submitBtn" class="btn btn-success w-100 d-none">
+                <i class="fas fa-check"></i> Submit Quiz
+            </button>
+        </div>
+    </div>
+
+    <div id="feedbackContainer" class="mb-4"></div>
+</div>
+
+{% if extras_enabled.explanations %}
+<div class="modal fade" id="explanationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="explanationTitle">Answer Explanation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="explanationText"></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// Flags from the server so we only build UI for enabled extras.
+const EXTRAS = {{ extras_enabled|tojson }};
+
+let currentQuestionIndex = 0;
+let totalQuestions = 0;
+// answers[i] stores what the user picked for question i (null = not answered).
+// The server keeps its own record and is the authority on correctness.
+let answers = [];
+let quizStartTime = null;
+let timerInterval = null;
+let timeLimit = 300;
+let timeRemaining = timeLimit;
+let quizMode = "normal";
+
+let explanationModal = null;
+if (EXTRAS.explanations) {
+    explanationModal = new bootstrap.Modal(document.getElementById("explanationModal"));
+}
+
+async function initializeQuiz() {
+    try {
+        const response = await fetch("/api/quiz-start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mode: quizMode, time_limit: timeLimit })
+        });
+        const data = await response.json();
+        if (!data.success) {
+            alert("Failed to start quiz: " + data.error);
+            return;
+        }
+
+        totalQuestions = data.total_questions;
+        timeLimit = data.time_limit;
+        timeRemaining = timeLimit;
+        quizStartTime = new Date();
+        answers = new Array(totalQuestions).fill(null);
+
+        document.getElementById("totalQuestions").textContent = totalQuestions;
+
+        if (EXTRAS.timer) startTimer();
+        loadQuestion(currentQuestionIndex);
+    } catch (error) {
+        console.error("Error initializing quiz:", error);
+        alert("Error starting quiz");
+    }
+}
+
+async function loadQuestion(index) {
+    try {
+        const response = await fetch(`/api/question/${index}`);
+        const data = await response.json();
+        if (!data.success) {
+            alert("Failed to load question: " + (data.error || ""));
+            return;
+        }
+
+        const question = data.question;
+        document.getElementById("questionText").textContent = question.text;
+        document.getElementById("currentQuestion").textContent = index + 1;
+
+        const optionsContainer = document.getElementById("optionsContainer");
+        optionsContainer.innerHTML = "";
+
+        question.options.forEach((option, idx) => {
+            const optionDiv = document.createElement("div");
+            optionDiv.className = "option-item mb-2";
+            const isChecked = answers[index] === option ? "checked" : "";
+            optionDiv.innerHTML = `
+                <input type="radio" id="option${idx}" name="answer" value="${option}" ${isChecked}>
+                <label for="option${idx}" class="ms-2">${option}</label>
+            `;
+            optionsContainer.appendChild(optionDiv);
+        });
+
+        document.querySelectorAll('input[name="answer"]').forEach(radio => {
+            radio.addEventListener("change", function () {
+                answers[currentQuestionIndex] = this.value;
+                submitAnswer(currentQuestionIndex, this.value);
+            });
+        });
+
+        updateButtons();
+        if (EXTRAS.progress_bar) updateProgress();
+        updateAnsweredCount();
+    } catch (error) {
+        console.error("Error loading question:", error);
+    }
+}
+
+async function submitAnswer(index, answer) {
+    // The server records the answer. We just use its response to show
+    // feedback and an explanation if that extra is enabled.
+    try {
+        const response = await fetch("/api/submit-answer", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question_id: index, answer: answer })
+        });
+        const data = await response.json();
+        if (!data.success) return;
+        showFeedback(data);
+    } catch (error) {
+        console.error("Error submitting answer:", error);
+    }
+}
+
+function showFeedback(data) {
+    const feedbackContainer = document.getElementById("feedbackContainer");
+    const isCorrect = data.is_correct;
+    feedbackContainer.innerHTML = `
+        <div class="alert alert-${isCorrect ? "success" : "danger"} alert-dismissible fade show">
+            <strong>${isCorrect ? "✓ Correct!" : "✗ Incorrect"}</strong>
+            ${isCorrect ? " Great job!" : " The correct answer is: <strong>" + data.correct_answer + "</strong>"}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+
+    if (EXTRAS.explanations && explanationModal) {
+        document.getElementById("explanationText").textContent = data.explanation || "";
+        const title = document.getElementById("explanationTitle");
+        title.innerHTML = isCorrect
+            ? '<span class="text-success">✓ Correct Answer</span>'
+            : '<span class="text-danger">✗ Incorrect Answer</span>';
+        explanationModal.show();
+    }
+}
+
+function startTimer() {
+    timerInterval = setInterval(() => {
+        timeRemaining--;
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        document.getElementById("timeRemaining").textContent =
+            `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+        const timerDisplay = document.getElementById("timerDisplay");
+        if (timeRemaining <= 60) {
+            timerDisplay.classList.add("timer-danger");
+        } else if (timeRemaining <= 120) {
+            timerDisplay.classList.add("timer-warning");
+        }
+
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            finishQuiz();
+        }
+    }, 1000);
+}
+
+function updateProgress() {
+    const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+    document.getElementById("progressBar").style.width = progress + "%";
+    document.getElementById("progressText").textContent = Math.round(progress) + "%";
+}
+
+function updateAnsweredCount() {
+    const answered = answers.filter(a => a !== null).length;
+    document.getElementById("scoreDisplay").textContent = `Answered: ${answered}/${totalQuestions}`;
+}
+
+function updateButtons() {
+    document.getElementById("prevBtn").disabled = currentQuestionIndex === 0;
+    document.getElementById("nextBtn").disabled = answers[currentQuestionIndex] === null;
+
+    if (currentQuestionIndex === totalQuestions - 1) {
+        document.getElementById("nextBtn").classList.add("d-none");
+        document.getElementById("submitBtn").classList.remove("d-none");
+    } else {
+        document.getElementById("nextBtn").classList.remove("d-none");
+        document.getElementById("submitBtn").classList.add("d-none");
+    }
+}
+
+document.getElementById("prevBtn").addEventListener("click", () => {
+    if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        loadQuestion(currentQuestionIndex);
+    }
+});
+
+document.getElementById("nextBtn").addEventListener("click", () => {
+    if (currentQuestionIndex < totalQuestions - 1) {
+        currentQuestionIndex++;
+        loadQuestion(currentQuestionIndex);
+    }
+});
+
+document.getElementById("submitBtn").addEventListener("click", finishQuiz);
+
+async function finishQuiz() {
+    clearInterval(timerInterval);
+    const timeTaken = Math.floor((new Date() - quizStartTime) / 1000);
+    try {
+        const response = await fetch("/api/submit-quiz", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ time_taken: timeTaken })
+        });
+        const data = await response.json();
+        if (data.success) {
+            window.location.href = `/results?score=${data.score}&correct=${data.correct}&total=${data.total}&time_taken=${data.time_taken}`;
+        } else {
+            alert("Could not submit quiz: " + (data.error || ""));
+        }
+    } catch (error) {
+        console.error("Error finishing quiz:", error);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", initializeQuiz);
+</script>
+{% endblock %}

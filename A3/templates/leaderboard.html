@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard - Quiz Game{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>🏆 Leaderboard</h1>
+        <p class="text-muted">Top 10 Quiz Masters</p>
+    </div>
+    <div class="col-md-auto">
+        <a href="/dashboard" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+{% if current_user_rank %}
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+    <strong>Your Ranking:</strong> You are currently ranked <strong>#{{ current_user_rank }}</strong>
+    on the leaderboard.
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">🥇 Top Scorers</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 60px;"><strong>Rank</strong></th>
+                    <th><strong>Player</strong></th>
+                    <th style="width: 120px;" class="text-center"><strong>Best Score</strong></th>
+                    <th style="width: 120px;" class="text-center"><strong>Avg Score</strong></th>
+                    <th style="width: 120px;" class="text-center"><strong>Quizzes</strong></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if leaderboard %}
+                    {% for player in leaderboard %}
+                    {# Using loop.index because Jinja does not have Python's enumerate(). #}
+                    <tr {% if player.user_id == current_user_id %}class="table-primary"{% endif %}>
+                        <td>
+                            {% if loop.index == 1 %}
+                                <span class="badge bg-warning text-dark">🥇 {{ loop.index }}</span>
+                            {% elif loop.index == 2 %}
+                                <span class="badge bg-secondary">🥈 {{ loop.index }}</span>
+                            {% elif loop.index == 3 %}
+                                <span class="badge bg-danger">🥉 {{ loop.index }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ loop.index }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ player.name }}</strong>
+                            {% if player.user_id == current_user_id %}
+                                <span class="badge bg-primary ms-2">You</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-success">{{ "%.1f"|format(player.best_score) }}%</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-info">{{ "%.1f"|format(player.avg_score) }}%</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark">{{ player.quizzes_taken }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox"></i> No scores yet. Be the first to complete a quiz!
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="card-title">Total Players</h5>
+                <h3 class="text-primary">{{ leaderboard|length }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="card-title">Top Best Score</h5>
+                <h3 class="text-success">
+                    {% if leaderboard %}
+                        {{ "%.1f"|format(leaderboard[0].best_score) }}%
+                    {% else %}
+                        —
+                    {% endif %}
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card bg-light">
+    <div class="card-body text-center">
+        <h5 class="card-title">Want to climb the leaderboard?</h5>
+        <p class="card-text mb-3">Take more quizzes and improve your best score!</p>
+        <a href="/quiz" class="btn btn-primary btn-lg">
+            <i class="fas fa-play"></i> Take a Quiz Now
+        </a>
+    </div>
+</div>
+{% endblock %}

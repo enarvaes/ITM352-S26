@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Quiz Game{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-lg">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <h1 class="display-4">🎯</h1>
+                    <h2>Quiz Game</h2>
+                    <p class="text-muted">Test Your Knowledge</p>
+                </div>
+
+                {% if error %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ error }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endif %}
+
+                <form method="POST" id="loginForm">
+                    <div class="mb-3">
+                        <label for="nameInput" class="form-label">Enter Your Name</label>
+                        <input type="text" class="form-control form-control-lg" id="nameInput"
+                               name="name" placeholder="Your name" required minlength="2">
+                        <small class="form-text text-muted">If you've visited before, we'll recognize you!</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-play"></i> Start Quiz
+                    </button>
+                </form>
+
+                <div class="mt-4 text-center">
+                    <p class="text-muted mb-2">Or check out the</p>
+                    <a href="/leaderboard" class="btn btn-outline-secondary">
+                        <i class="fas fa-trophy"></i> Leaderboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 alert alert-info">
+            <h5><i class="fas fa-info-circle"></i> About This Quiz</h5>
+            <ul class="mb-0">
+                <li>Multiple choice questions on a range of topics</li>
+                <li>Questions and answer options are randomized</li>
+                <li>Your score history is tracked across visits</li>
+                <li>Top players are shown on the leaderboard</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

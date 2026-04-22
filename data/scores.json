@@ -1,0 +1,57 @@
+{
+  "3": [
+    {
+      "quiz_id": null,
+      "date": "2026-04-21T22:42:07.653863",
+      "score": 66.67,
+      "correct": 10,
+      "total": 15,
+      "time_taken": 300,
+      "mode": "normal"
+    }
+  ],
+  "4": [
+    {
+      "quiz_id": null,
+      "date": "2026-04-21T22:42:07.662925",
+      "score": 73.33,
+      "correct": 11,
+      "total": 15,
+      "time_taken": 300,
+      "mode": "normal"
+    }
+  ],
+  "5": [
+    {
+      "quiz_id": null,
+      "date": "2026-04-21T22:42:07.672394",
+      "score": 80.0,
+      "correct": 12,
+      "total": 15,
+      "time_taken": 300,
+      "mode": "normal"
+    }
+  ],
+  "7": [
+    {
+      "quiz_id": null,
+      "date": "2026-04-21T22:42:07.768935",
+      "score": 80.0,
+      "correct": 12,
+      "total": 15,
+      "time_taken": 250,
+      "mode": "normal"
+    }
+  ],
+  "2": [
+    {
+      "quiz_id": null,
+      "date": "2026-04-21T22:42:07.788796",
+      "score": 66.67,
+      "correct": 10,
+      "total": 15,
+      "time_taken": 300,
+      "mode": "normal"
+    }
+  ]
+}

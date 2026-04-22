@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Results - Quiz Game{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <!-- Score Display -->
+        <div class="card mb-4 text-center results-card">
+            <div class="card-body p-5">
+                <h2 class="mb-4">Quiz Completed!</h2>
+                
+                <div class="score-circle mb-4">
+                    <div class="score-percentage" id="scorePercentage">{{ score }}%</div>
+                </div>
+                
+                <h3 id="scoreMessage" class="mb-4">
+                    {% if score|int >= 80 %}
+                        🌟 Excellent Work!
+                    {% elif score|int >= 60 %}
+                        👍 Good Job!
+                    {% elif score|int >= 40 %}
+                        📚 Keep Practicing!
+                    {% else %}
+                        💪 Try Again!
+                    {% endif %}
+                </h3>
+                
+                <p class="lead text-muted">You scored <strong>{{ score }}%</strong> on this quiz</p>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card text-center stat-card">
+                    <div class="card-body">
+                        <h5 class="card-title text-muted">Correct Answers</h5>
+                        <h3 class="text-success">{{ correct }}/{{ total }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center stat-card">
+                    <div class="card-body">
+                        <h5 class="card-title text-muted">Time Taken</h5>
+                        <h3 class="text-info">{{ time_taken }}s</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center stat-card">
+                    <div class="card-body">
+                        <h5 class="card-title text-muted">Incorrect Answers</h5>
+                        <h3 class="text-danger">{{ total - correct }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Bar -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Performance</h5>
+                <div class="progress" style="height: 30px;">
+                    <div class="progress-bar" id="correctBar" style="width: {{ (correct / total * 100)|int }}%;" role="progressbar">
+                        Correct: {{ correct }}
+                    </div>
+                    <div class="progress-bar bg-danger" style="width: {{ ((total - correct) / total * 100)|int }}%;" role="progressbar">
+                        Incorrect: {{ total - correct }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">📊 Summary</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2"><strong>Total Questions:</strong> {{ total }}</li>
+                    <li class="mb-2"><strong>Correct:</strong> <span class="badge bg-success">{{ correct }}</span></li>
+                    <li class="mb-2"><strong>Incorrect:</strong> <span class="badge bg-danger">{{ total - correct }}</span></li>
+                    <li class="mb-2"><strong>Accuracy:</strong> {{ score }}%</li>
+                    <li><strong>Time Elapsed:</strong> {{ (time_taken // 60) }}m {{ (time_taken % 60) }}s</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Performance Feedback -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">💡 Feedback</h5>
+            </div>
+            <div class="card-body">
+                {% if score|int >= 80 %}
+                    <p>Outstanding performance! You've demonstrated excellent knowledge on these topics. Keep up the great work and challenge yourself with more quizzes!</p>
+                {% elif score|int >= 60 %}
+                    <p>Good effort! You answered most questions correctly. Review the incorrect answers and try again to improve your score further.</p>
+                {% elif score|int >= 40 %}
+                    <p>You're making progress! Review the material and focus on the topics where you struggled. Practice makes perfect!</p>
+                {% else %}
+                    <p>This is a learning opportunity! Review the explanations for incorrect answers and try the quiz again. Each attempt will help you improve.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row gap-2">
+            <div class="col-md-6">
+                <a href="/dashboard" class="btn btn-primary btn-lg w-100">
+                    <i class="fas fa-home"></i> Back to Dashboard
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="/quiz" class="btn btn-success btn-lg w-100">
+                    <i class="fas fa-redo"></i> Take Another Quiz
+                </a>
+            </div>
+        </div>
+
+        <div class="row gap-2 mt-3">
+            <div class="col">
+                <a href="/leaderboard" class="btn btn-outline-secondary btn-lg w-100">
+                    <i class="fas fa-trophy"></i> View Leaderboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.score-circle {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.score-percentage {
+    font-size: 48px;
+    font-weight: bold;
+    color: white;
+}
+</style>
+{% endblock %}
